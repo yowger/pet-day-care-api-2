@@ -2,6 +2,7 @@ package container
 
 type Container interface {
 	GetEnv() string
+	GetLogger() string
 }
 
 type container struct {
@@ -15,5 +16,9 @@ func NewContainer(env string) Container {
 }
 
 func (c *container) GetEnv() string {
+	return ""
+}
+
+func (c *container) GetLogger() string {
 	return ""
 }
