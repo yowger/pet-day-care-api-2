@@ -21,7 +21,6 @@ func main() {
 	waitGroup := &sync.WaitGroup{}
 	notifyCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	healthCheckInterval := 30 * time.Second
 
 	configPath := "."
 	configName := ".env"
@@ -44,6 +43,8 @@ func main() {
 
 	waitGroup.Add(1)
 	go func() {
+		healthCheckInterval := 30 * time.Second
+
 		defer waitGroup.Done()
 
 		for {
@@ -60,4 +61,18 @@ func main() {
 
 	<-notifyCtx.Done()
 
+	log.Println("Shutting down server...")
+
+	shutdownDelay := 10 * time.Second
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownDelay)
+	defer cancel()
+
+	if err := e.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("Error during server shutdown: %v", err)
+	}
+
+	waitGroup.Wait()
+	pgxPool.Close()
+
+	log.Println("Shutdown complete...")
 }
