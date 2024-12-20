@@ -9,7 +9,7 @@ INSERT INTO users (
     )
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
--- name: GetUsersWithPetsPaginated :many
+-- name: FindUsersWithPetsPaginated :many
 SELECT u.id AS user_id,
     u.first_name,
     u.last_name,
@@ -26,15 +26,15 @@ FROM users u
     LEFT JOIN breeds b ON p.breed_id = b.id
 ORDER BY u.created_at DESC
 LIMIT $1 OFFSET $2;
--- name: GetUserByID :one
+-- name: FindUserByID :one
 SELECT *
 FROM users
 WHERE id = $1;
--- name: GetUserByEmail :one
+-- name: FindUserByEmail :one
 SELECT *
 FROM users
 WHERE email = $1;
--- name: UpdateUserByID :one
+-- name: UpdateUser :one
 update users
 SET first_name = $1,
     last_name = $2,

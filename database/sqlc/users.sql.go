@@ -57,14 +57,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
-const getUserByEmail = `-- name: GetUserByEmail :one
+const findUserByEmail = `-- name: FindUserByEmail :one
 SELECT id, first_name, last_name, email, phone_number, password, role_id, created_at, updated_at
 FROM users
 WHERE email = $1
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
-	row := q.db.QueryRow(ctx, getUserByEmail, email)
+func (q *Queries) FindUserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRow(ctx, findUserByEmail, email)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -80,14 +80,14 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	return i, err
 }
 
-const getUserByID = `-- name: GetUserByID :one
+const findUserByID = `-- name: FindUserByID :one
 SELECT id, first_name, last_name, email, phone_number, password, role_id, created_at, updated_at
 FROM users
 WHERE id = $1
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
-	row := q.db.QueryRow(ctx, getUserByID, id)
+func (q *Queries) FindUserByID(ctx context.Context, id int32) (User, error) {
+	row := q.db.QueryRow(ctx, findUserByID, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -103,7 +103,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
 	return i, err
 }
 
-const getUsersWithPetsPaginated = `-- name: GetUsersWithPetsPaginated :many
+const findUsersWithPetsPaginated = `-- name: FindUsersWithPetsPaginated :many
 SELECT u.id AS user_id,
     u.first_name,
     u.last_name,
@@ -122,12 +122,12 @@ ORDER BY u.created_at DESC
 LIMIT $1 OFFSET $2
 `
 
-type GetUsersWithPetsPaginatedParams struct {
+type FindUsersWithPetsPaginatedParams struct {
 	Limit  int32 `db:"limit" json:"limit"`
 	Offset int32 `db:"offset" json:"offset"`
 }
 
-type GetUsersWithPetsPaginatedRow struct {
+type FindUsersWithPetsPaginatedRow struct {
 	UserID       int32       `db:"user_id" json:"user_id"`
 	FirstName    string      `db:"first_name" json:"first_name"`
 	LastName     string      `db:"last_name" json:"last_name"`
@@ -140,15 +140,15 @@ type GetUsersWithPetsPaginatedRow struct {
 	BreedName    pgtype.Text `db:"breed_name" json:"breed_name"`
 }
 
-func (q *Queries) GetUsersWithPetsPaginated(ctx context.Context, arg GetUsersWithPetsPaginatedParams) ([]GetUsersWithPetsPaginatedRow, error) {
-	rows, err := q.db.Query(ctx, getUsersWithPetsPaginated, arg.Limit, arg.Offset)
+func (q *Queries) FindUsersWithPetsPaginated(ctx context.Context, arg FindUsersWithPetsPaginatedParams) ([]FindUsersWithPetsPaginatedRow, error) {
+	rows, err := q.db.Query(ctx, findUsersWithPetsPaginated, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetUsersWithPetsPaginatedRow
+	var items []FindUsersWithPetsPaginatedRow
 	for rows.Next() {
-		var i GetUsersWithPetsPaginatedRow
+		var i FindUsersWithPetsPaginatedRow
 		if err := rows.Scan(
 			&i.UserID,
 			&i.FirstName,
@@ -171,7 +171,7 @@ func (q *Queries) GetUsersWithPetsPaginated(ctx context.Context, arg GetUsersWit
 	return items, nil
 }
 
-const updateUserByID = `-- name: UpdateUserByID :one
+const updateUser = `-- name: UpdateUser :one
 update users
 SET first_name = $1,
     last_name = $2,
@@ -182,7 +182,7 @@ WHERE id = $6
 RETURNING id, first_name, last_name, email, phone_number, password, role_id, created_at, updated_at
 `
 
-type UpdateUserByIDParams struct {
+type UpdateUserParams struct {
 	FirstName   string `db:"first_name" json:"first_name"`
 	LastName    string `db:"last_name" json:"last_name"`
 	Email       string `db:"email" json:"email"`
@@ -191,8 +191,8 @@ type UpdateUserByIDParams struct {
 	ID          int32  `db:"id" json:"id"`
 }
 
-func (q *Queries) UpdateUserByID(ctx context.Context, arg UpdateUserByIDParams) (User, error) {
-	row := q.db.QueryRow(ctx, updateUserByID,
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUser,
 		arg.FirstName,
 		arg.LastName,
 		arg.Email,
