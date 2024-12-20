@@ -5,6 +5,6 @@ type BookController interface {
 
 type bookController struct{}
 
-func NewBookController() PetController {
+func NewBookController() BookController {
 	return &bookController{}
 }
