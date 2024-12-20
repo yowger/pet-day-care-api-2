@@ -7,7 +7,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func ConnectDatabase(connString string) (*pgxpool.Pool, error) {
+type PGXDB struct {
+	pool *pgxpool.Pool
+}
+
+func NewDatabase(connString string) (*PGXDB, error) {
 	dbConfig, err := pgxpool.ParseConfig(connString)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse db config: %w", err)
@@ -21,5 +25,15 @@ func ConnectDatabase(connString string) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("failed to create db pool: %w", err)
 	}
 
-	return pool, nil
+	return &PGXDB{pool: pool}, nil
+}
+
+func (db *PGXDB) Ping(ctx context.Context) error {
+	return db.pool.Ping(ctx)
+}
+
+func (db *PGXDB) Close() error {
+	db.pool.Close()
+
+	return nil
 }

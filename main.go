@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,48 +10,48 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/labstack/echo/v4"
 	"github.com/yowger/pet-day-care-api-2/config"
 	"github.com/yowger/pet-day-care-api-2/database"
+	"github.com/yowger/pet-day-care-api-2/server"
 )
 
 func main() {
-	e := echo.New()
-	waitGroup := &sync.WaitGroup{}
-	notifyCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
 	configPath := "."
 	configName := ".env"
 	conf := config.LoadAppConfig(configPath, configName)
 
-	pgxPool, err := database.ConnectDatabase(conf.DATABASE_URL)
+	db, err := database.NewDatabase(conf.DATABASE_URL)
 	if err != nil {
 		log.Fatalf("Error connecting to database: %v", err)
 	}
 
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
+	server := server.NewServer(conf.PORT)
 
-		port := fmt.Sprintf(":%s", conf.PORT)
-		if err := e.Start(port); err != nil && err != http.ErrServerClosed {
+	waitGrp := &sync.WaitGroup{}
+
+	waitGrp.Add(1)
+	go func() {
+		defer waitGrp.Done()
+
+		if err := server.Start(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Error starting server: %v", err)
 		}
 	}()
 
-	waitGroup.Add(1)
-	go func() {
-		healthCheckInterval := 30 * time.Second
+	notifyCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-		defer waitGroup.Done()
+	healthCheckInterval := 30 * time.Second
+	waitGrp.Add(1)
+	go func() {
+		defer waitGrp.Done()
 
 		for {
 			select {
 			case <-notifyCtx.Done():
 				return
 			case <-time.After(healthCheckInterval):
-				if err := pgxPool.Ping(context.Background()); err != nil {
+				if err := db.Ping(context.Background()); err != nil {
 					log.Fatalf("Error connecting to database: %v", err)
 				}
 			}
@@ -67,12 +66,12 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownDelay)
 	defer cancel()
 
-	if err := e.Shutdown(shutdownCtx); err != nil {
+	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Fatalf("Error during server shutdown: %v", err)
 	}
 
-	waitGroup.Wait()
-	pgxPool.Close()
+	waitGrp.Wait()
+	db.Close()
 
 	log.Println("Shutdown complete...")
 }
