@@ -17,11 +17,12 @@ type UserService interface {
 }
 
 type userService struct {
-	ur repository.UserRepo
+	ur  repository.UserRepo
+	ctx context.Context
 }
 
-func NewUserService(ur repository.UserRepo) UserService {
-	return &userService{ur: ur}
+func NewUserService(ur repository.UserRepo, ctx context.Context) UserService {
+	return &userService{ur: ur, ctx: ctx}
 }
 
 func (us *userService) CreateUser(userDto dto.CreateUser) {
@@ -38,15 +39,15 @@ func (us *userService) CreateUser(userDto dto.CreateUser) {
 		RoleID:      userDto.RoleID,
 	}
 
-	us.ur.CreateUser(context.Background(), &userParams)
+	us.ur.CreateUser(us.ctx, &userParams)
 }
 
 func (us *userService) GetUserByEmail(email string) (*model.User, error) {
-	return us.ur.GetUserByEmail(context.Background(), email)
+	return us.ur.GetUserByEmail(us.ctx, email)
 }
 
 func (us *userService) GetUserByID(id int32) (*model.User, error) {
-	return us.ur.GetUserByID(context.Background(), id)
+	return us.ur.GetUserByID(us.ctx, id)
 }
 
 func (us *userService) UpdateUser(userDto dto.UpdateUserSelf) (*model.User, error) {

@@ -14,6 +14,7 @@ import (
 	"github.com/yowger/pet-day-care-api-2/config"
 	"github.com/yowger/pet-day-care-api-2/database"
 	sqlc "github.com/yowger/pet-day-care-api-2/database/sqlc"
+	"github.com/yowger/pet-day-care-api-2/router"
 )
 
 func main() {
@@ -22,6 +23,8 @@ func main() {
 	db := database.NewDatabase(cfg)
 	queries := sqlc.New(db)
 	ctx := context.Background()
+
+	router.NewRouter(e, queries, ctx)
 
 	waitGrp := &sync.WaitGroup{}
 

@@ -16,10 +16,10 @@ type UserRepo interface {
 }
 
 type userRepo struct {
-	queries db.Queries
+	queries *db.Queries
 }
 
-func NewUserRepo(queries db.Queries) UserRepo {
+func NewUserRepo(queries *db.Queries) UserRepo {
 	return &userRepo{
 		queries: queries}
 }

@@ -12,7 +12,7 @@ type UserController interface {
 	DeleteUser(c echo.Context) error
 }
 
-type userController struct{
+type userController struct {
 	service service.UserService
 }
 
@@ -23,7 +23,7 @@ func NewUserController(service service.UserService) UserController {
 }
 
 func (u *userController) CreateUser(c echo.Context) error {
-	user, err := u.
+	// user, err := u.
 
 	return nil
 }
