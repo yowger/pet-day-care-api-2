@@ -12,13 +12,13 @@ import (
 	"github.com/yowger/pet-day-care-api-2/service"
 )
 
-func NewRouter(e *echo.Echo, queries *sqlc.Queries, ctx context.Context) {
+func Init(e *echo.Echo, queries *sqlc.Queries, ctx context.Context) {
 
+	// add rate limit
 	e.Use(middleware.Cors())
 
 	setUpUserRoutes(e, queries, ctx)
 }
-
 func setUpUserRoutes(e *echo.Echo, queries *sqlc.Queries, ctx context.Context) {
 	userRepo := repository.NewUserRepo(queries)
 	userService := service.NewUserService(userRepo, ctx)

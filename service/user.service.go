@@ -9,10 +9,10 @@ import (
 )
 
 type UserService interface {
-	CreateUser(userDto dto.CreateUser)
+	CreateUser(userDto dto.UserDTO)
 	GetUserByEmail(email string) (*model.User, error)
 	GetUserByID(id int32) (*model.User, error)
-	UpdateUser(userDto dto.UpdateUserSelf) (*model.User, error)
+	UpdateUser(userDto dto.UserDTO) (*model.User, error)
 	DeleteUserByID(id int32) error
 }
 
@@ -25,7 +25,7 @@ func NewUserService(ur repository.UserRepo, ctx context.Context) UserService {
 	return &userService{ur: ur, ctx: ctx}
 }
 
-func (us *userService) CreateUser(userDto dto.CreateUser) {
+func (us *userService) CreateUser(userDto dto.UserDTO) {
 	// validate dto
 
 	// hash password
@@ -36,7 +36,6 @@ func (us *userService) CreateUser(userDto dto.CreateUser) {
 		Email:       userDto.Email,
 		Password:    userDto.Password,
 		PhoneNumber: userDto.PhoneNumber,
-		RoleID:      userDto.RoleID,
 	}
 
 	us.ur.CreateUser(us.ctx, &userParams)
@@ -50,7 +49,7 @@ func (us *userService) GetUserByID(id int32) (*model.User, error) {
 	return us.ur.GetUserByID(us.ctx, id)
 }
 
-func (us *userService) UpdateUser(userDto dto.UpdateUserSelf) (*model.User, error) {
+func (us *userService) UpdateUser(userDto dto.UserDTO) (*model.User, error) {
 	userParams := model.User{
 		FirstName:   userDto.FirstName,
 		LastName:    userDto.LastName,
@@ -58,9 +57,9 @@ func (us *userService) UpdateUser(userDto dto.UpdateUserSelf) (*model.User, erro
 		PhoneNumber: userDto.PhoneNumber,
 	}
 
-	return us.ur.UpdateUser(context.Background(), &userParams)
+	return us.ur.UpdateUser(us.ctx, &userParams)
 }
 
 func (us *userService) DeleteUserByID(id int32) error {
-	return us.ur.DeleteUserByID(context.Background(), id)
+	return us.ur.DeleteUserByID(us.ctx, id)
 }

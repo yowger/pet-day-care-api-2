@@ -24,7 +24,7 @@ func main() {
 	queries := sqlc.New(db)
 	ctx := context.Background()
 
-	router.NewRouter(e, queries, ctx)
+	router.Init(e, queries, ctx)
 
 	waitGrp := &sync.WaitGroup{}
 
