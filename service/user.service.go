@@ -2,76 +2,64 @@ package service
 
 import (
 	"context"
-	"log"
 
-	database "github.com/yowger/pet-day-care-api-2/database/sqlc"
 	"github.com/yowger/pet-day-care-api-2/dto"
+	"github.com/yowger/pet-day-care-api-2/model"
+	"github.com/yowger/pet-day-care-api-2/repository"
 )
 
 type UserService interface {
-	CreateUser(dto *dto.CreateUserReq) (*dto.UserRes, map[string]string)
-	FindUserByID(id int32) (*database.User, error)
-	FindAllUsersByPage(page, size string)
-	UpdateUser()
-	DeleteUser(id int)
+	CreateUser(userDto dto.CreateUser)
+	GetUserByEmail(email string) (*model.User, error)
+	GetUserByID(id int32) (*model.User, error)
+	UpdateUser(userDto dto.UpdateUserSelf) (*model.User, error)
+	DeleteUserByID(id int32) error
 }
 
 type userService struct {
-	queries database.Queries
+	ur repository.UserRepo
 }
 
-func NewUserService() UserService {
-	return &userService{}
+func NewUserService(ur repository.UserRepo) UserService {
+	return &userService{ur: ur}
 }
 
-func (us *userService) CreateUser(req *dto.CreateUserReq) (*dto.UserRes, map[string]string) {
-	if errs := req.Validate(); errs != nil {
-		return nil, errs
+func (us *userService) CreateUser(userDto dto.CreateUser) {
+	// validate dto
+
+	// hash password
+
+	userParams := model.User{
+		FirstName:   userDto.FirstName,
+		LastName:    userDto.LastName,
+		Email:       userDto.Email,
+		Password:    userDto.Password,
+		PhoneNumber: userDto.PhoneNumber,
+		RoleID:      userDto.RoleID,
 	}
 
-	params := database.CreateUserParams{
-		FirstName:   req.FirstName,
-		LastName:    req.LastName,
-		Email:       req.Email,
-		PhoneNumber: req.PhoneNumber,
-		Password:    req.Password,
-		RoleID:      req.RoleID,
-	}
-	user, err := us.queries.CreateUser(context.Background(), params)
-	if err != nil {
-		log.Println(err)
-
-		return nil, map[string]string{"error": "failed to create user"}
-	}
-
-	res := dto.UserRes{
-		FirstName:   user.FirstName,
-		LastName:    user.LastName,
-		Email:       user.Email,
-		PhoneNumber: user.PhoneNumber,
-		RoleID:      user.RoleID,
-	}
-
-	return &res, nil
+	us.ur.CreateUser(context.Background(), &userParams)
 }
 
-func (us *userService) FindUserByID(id int32) (*database.User, error) {
-	user, err := us.queries.FindUserByID(context.Background(), id)
-	if err != nil {
-		return nil, err
+func (us *userService) GetUserByEmail(email string) (*model.User, error) {
+	return us.ur.GetUserByEmail(context.Background(), email)
+}
+
+func (us *userService) GetUserByID(id int32) (*model.User, error) {
+	return us.ur.GetUserByID(context.Background(), id)
+}
+
+func (us *userService) UpdateUser(userDto dto.UpdateUserSelf) (*model.User, error) {
+	userParams := model.User{
+		FirstName:   userDto.FirstName,
+		LastName:    userDto.LastName,
+		Email:       userDto.Email,
+		PhoneNumber: userDto.PhoneNumber,
 	}
 
-	return &user, nil
+	return us.ur.UpdateUser(context.Background(), &userParams)
 }
 
-func (us *userService) FindAllUsersByPage(page, size string) {
-	// users, err := us.queries.Find
-}
-
-func (us *userService) UpdateUser() {
-	// userParams := database.UpdateUserParams{}
-	// user, err := us.queries.UpdateUser(context.Background(), userParams)
-}
-
-func (us *userService) DeleteUser(id int) {
+func (us *userService) DeleteUserByID(id int32) error {
+	return us.ur.DeleteUserByID(context.Background(), id)
 }

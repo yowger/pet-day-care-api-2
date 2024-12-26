@@ -57,14 +57,24 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
-const findUserByEmail = `-- name: FindUserByEmail :one
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users
+WHERE id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteUser, id)
+	return err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, first_name, last_name, email, phone_number, password, role_id, created_at, updated_at
 FROM users
 WHERE email = $1
 `
 
-func (q *Queries) FindUserByEmail(ctx context.Context, email string) (User, error) {
-	row := q.db.QueryRow(ctx, findUserByEmail, email)
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByEmail, email)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -80,14 +90,14 @@ func (q *Queries) FindUserByEmail(ctx context.Context, email string) (User, erro
 	return i, err
 }
 
-const findUserByID = `-- name: FindUserByID :one
+const getUserByID = `-- name: GetUserByID :one
 SELECT id, first_name, last_name, email, phone_number, password, role_id, created_at, updated_at
 FROM users
 WHERE id = $1
 `
 
-func (q *Queries) FindUserByID(ctx context.Context, id int32) (User, error) {
-	row := q.db.QueryRow(ctx, findUserByID, id)
+func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -103,7 +113,7 @@ func (q *Queries) FindUserByID(ctx context.Context, id int32) (User, error) {
 	return i, err
 }
 
-const findUsersWithPetsPaginated = `-- name: FindUsersWithPetsPaginated :many
+const getUsersWithPetsPaginated = `-- name: GetUsersWithPetsPaginated :many
 SELECT u.id AS user_id,
     u.first_name,
     u.last_name,
@@ -122,12 +132,12 @@ ORDER BY u.created_at DESC
 LIMIT $1 OFFSET $2
 `
 
-type FindUsersWithPetsPaginatedParams struct {
+type GetUsersWithPetsPaginatedParams struct {
 	Limit  int32 `db:"limit" json:"limit"`
 	Offset int32 `db:"offset" json:"offset"`
 }
 
-type FindUsersWithPetsPaginatedRow struct {
+type GetUsersWithPetsPaginatedRow struct {
 	UserID       int32       `db:"user_id" json:"user_id"`
 	FirstName    string      `db:"first_name" json:"first_name"`
 	LastName     string      `db:"last_name" json:"last_name"`
@@ -140,15 +150,15 @@ type FindUsersWithPetsPaginatedRow struct {
 	BreedName    pgtype.Text `db:"breed_name" json:"breed_name"`
 }
 
-func (q *Queries) FindUsersWithPetsPaginated(ctx context.Context, arg FindUsersWithPetsPaginatedParams) ([]FindUsersWithPetsPaginatedRow, error) {
-	rows, err := q.db.Query(ctx, findUsersWithPetsPaginated, arg.Limit, arg.Offset)
+func (q *Queries) GetUsersWithPetsPaginated(ctx context.Context, arg GetUsersWithPetsPaginatedParams) ([]GetUsersWithPetsPaginatedRow, error) {
+	rows, err := q.db.Query(ctx, getUsersWithPetsPaginated, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []FindUsersWithPetsPaginatedRow
+	var items []GetUsersWithPetsPaginatedRow
 	for rows.Next() {
-		var i FindUsersWithPetsPaginatedRow
+		var i GetUsersWithPetsPaginatedRow
 		if err := rows.Scan(
 			&i.UserID,
 			&i.FirstName,

@@ -12,14 +12,14 @@ type UserRepo interface {
 	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 	GetUserByID(ctx context.Context, id int32) (*model.User, error)
 	UpdateUser(ctx context.Context, userParams *model.User) (*model.User, error)
-	DeleteUser(ctx context.Context, id int32) error
+	DeleteUserByID(ctx context.Context, id int32) error
 }
 
 type userRepo struct {
-	queries *db.Queries
+	queries db.Queries
 }
 
-func NewUserRepo(queries *db.Queries) UserRepo {
+func NewUserRepo(queries db.Queries) UserRepo {
 	return &userRepo{
 		queries: queries}
 }
@@ -66,7 +66,7 @@ func (ur *userRepo) UpdateUser(ctx context.Context, userParams *model.User) (*mo
 	return toDomainUser(&user), err
 }
 
-func (ur *userRepo) DeleteUser(ctx context.Context, id int32) error {
+func (ur *userRepo) DeleteUserByID(ctx context.Context, id int32) error {
 	return ur.queries.DeleteUser(ctx, id)
 }
 
