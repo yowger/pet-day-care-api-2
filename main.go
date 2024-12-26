@@ -18,8 +18,8 @@ import (
 )
 
 func main() {
-	e := echo.New()
 	cfg := config.LoadAppConfig()
+	e := echo.New()
 	db := database.NewDatabase(cfg)
 	queries := sqlc.New(db)
 	ctx := context.Background()
@@ -40,7 +40,6 @@ func main() {
 	notifyCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	healthCheckInterval := 30 * time.Second
 	waitGrp.Add(1)
 	go func() {
 		defer waitGrp.Done()
@@ -49,7 +48,7 @@ func main() {
 			select {
 			case <-notifyCtx.Done():
 				return
-			case <-time.After(healthCheckInterval):
+			case <-time.After(30 * time.Second):
 				if err := db.Ping(context.Background()); err != nil {
 					log.Fatalf("Error connecting to database: %v", err)
 				}
@@ -61,8 +60,7 @@ func main() {
 
 	log.Println("Shutting down server...")
 
-	shutdownDelay := 10 * time.Second
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownDelay)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := e.Shutdown(shutdownCtx); err != nil {

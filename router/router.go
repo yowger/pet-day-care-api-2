@@ -17,12 +17,9 @@ func NewRouter(e *echo.Echo, queries *sqlc.Queries, ctx context.Context) {
 }
 
 func setUpUserRoutes(e *echo.Echo, queries *sqlc.Queries, ctx context.Context) {
-	apiGroup := e.Group(config.API)
-	userGroup := apiGroup.Group(config.APIUserGroup)
-
 	userRepo := repository.NewUserRepo(queries)
 	userService := service.NewUserService(userRepo, ctx)
 	userController := controller.NewUserController(userService)
 
-	userGroup.GET("/", func(c echo.Context) error { return userController.GetUser(c) })
+	e.GET(config.APIUser, func(c echo.Context) error { return userController.GetUser(c) })
 }
