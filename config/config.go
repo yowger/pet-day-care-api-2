@@ -11,16 +11,16 @@ type Config struct {
 	DATABASE_URL string `mapstructure:"DATABASE_URL"`
 }
 
-func LoadAppConfig(configPath, configName string) *Config {
+func LoadAppConfig() *Config {
 	var config *Config
 
-	viper.SetConfigName(configName)
-	viper.AddConfigPath(configPath)
+	viper.SetConfigName(".")
+	viper.AddConfigPath(".env")
 	viper.SetConfigType("env")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			log.Fatalf("Config file not found in path: %s\n", configPath)
+			log.Fatalf("Config file not found in path: %s\n", ".env")
 		}
 
 		log.Fatalf("Error reading config file: %v\n", err)

@@ -18,15 +18,10 @@ import (
 
 func main() {
 	e := echo.New()
-
-	conf := config.LoadAppConfig(".", ".env")
-
-	db, err := database.ConnectDB(conf.DATABASE_URL)
-	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
-	}
-
+	cfg := config.LoadAppConfig()
+	db := database.NewDatabase(cfg)
 	queries := sqlc.New(db)
+	ctx := context.Background()
 
 	waitGrp := &sync.WaitGroup{}
 
@@ -34,7 +29,7 @@ func main() {
 	go func() {
 		defer waitGrp.Done()
 
-		if err := e.Start(conf.PORT); err != nil && err != http.ErrServerClosed {
+		if err := e.Start(cfg.PORT); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Error starting server: %v", err)
 		}
 	}()
