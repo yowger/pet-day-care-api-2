@@ -10,22 +10,23 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	"github.com/yowger/pet-day-care-api-2/config"
 	"github.com/yowger/pet-day-care-api-2/database"
-	"github.com/yowger/pet-day-care-api-2/server"
+	sqlc "github.com/yowger/pet-day-care-api-2/database/sqlc"
 )
 
 func main() {
-	configPath := "."
-	configName := ".env"
-	conf := config.LoadAppConfig(configPath, configName)
+	e := echo.New()
 
-	db, err := database.NewDatabase(conf.DATABASE_URL)
+	conf := config.LoadAppConfig(".", ".env")
+
+	db, err := database.ConnectDB(conf.DATABASE_URL)
 	if err != nil {
 		log.Fatalf("Error connecting to database: %v", err)
 	}
 
-	server := server.NewServer(conf.PORT)
+	queries := sqlc.New(db)
 
 	waitGrp := &sync.WaitGroup{}
 
@@ -33,7 +34,7 @@ func main() {
 	go func() {
 		defer waitGrp.Done()
 
-		if err := server.Start(); err != nil && err != http.ErrServerClosed {
+		if err := e.Start(conf.PORT); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Error starting server: %v", err)
 		}
 	}()
@@ -66,7 +67,7 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownDelay)
 	defer cancel()
 
-	if err := server.Shutdown(shutdownCtx); err != nil {
+	if err := e.Shutdown(shutdownCtx); err != nil {
 		log.Fatalf("Error during server shutdown: %v", err)
 	}
 
