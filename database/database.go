@@ -9,7 +9,7 @@ import (
 )
 
 // add logger ?
-func NewDatabase(cfg *config.Config) *pgxpool.Pool {
+func New(cfg *config.Config) *pgxpool.Pool {
 	dbConfig, err := pgxpool.ParseConfig(cfg.DATABASE_URL)
 	if err != nil {
 		log.Fatalf("failed to parse db config: %v", err)
